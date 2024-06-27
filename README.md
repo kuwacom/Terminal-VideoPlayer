@@ -1,0 +1,2 @@
+# What Is This
+このプログラムは、terminal及びconsoleでANSI文字コードを使い、フルカラーもしくはモノクロで動画を再生する物です。
