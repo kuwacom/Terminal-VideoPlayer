@@ -1,0 +1,6 @@
+# Python venv
+venv
+
+# Video files
+*.mp4
+*.webm
