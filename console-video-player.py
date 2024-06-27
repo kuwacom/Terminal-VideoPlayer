@@ -2,6 +2,8 @@ import cv2
 import shutil
 import time
 
+def rgbAnsiBg(r, g, b, txt):
+    return f'\033[48;2;{r};{g};{b}m{txt}\033[0m'
 def rgbAnsi(r, g, b, txt):
     return f'\033[38;2;{r};{g};{b}m{txt}\033[0m'
 
@@ -13,7 +15,9 @@ def frameToConsole(
     # Resize frame
     frame = cv2.resize(frame, (width, height))
     
-    char='█'
+    # 色付き文字で描画する場合はこれ
+    # char = '█' | line = ''.join(rgbAnsi(pixel[2], pixel[1], pixel[0], char) for pixel in row)
+    char = ' '
 
     # Print to console
     if colorMode=='color': # フルカラー表示
@@ -22,14 +26,14 @@ def frameToConsole(
             print(f'\033[{height}A', end='')
             lines = ''
             for row in frame:
-                line = ''.join(rgbAnsi(pixel[2], pixel[1], pixel[0], char) for pixel in row)
+                line = ''.join(rgbAnsiBg(pixel[2], pixel[1], pixel[0], char) for pixel in row)
                 lines += line + '\n'
             print(lines, end='')
         else: # line
             # 一行ずつ描画
             print(f'\033[{height}A', end='')
             for row in frame:
-                line = ''.join(rgbAnsi(pixel[2], pixel[1], pixel[0], char) for pixel in row)
+                line = ''.join(rgbAnsiBg(pixel[2], pixel[1], pixel[0], char) for pixel in row)
                 print(line)
     else: # モノクロ
         # Convert to grayscale
@@ -74,9 +78,9 @@ def videoToConsole(video_path):
 
         frameToConsole(
             frame, width=consoleSize.columns, height=consoleSize.lines-1,
-            colorMode='mono',
+            colorMode='color',
             fontColor=None,
-            renderMode='once'
+            renderMode='line'
         )
         # time.sleep(1 / 24)  # frame interval
 
