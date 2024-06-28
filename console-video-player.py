@@ -2,6 +2,15 @@ import math
 import cv2
 import shutil
 import time
+import keyboard
+
+import subprocess
+import threading
+import signal
+import sys
+
+from pydub import AudioSegment
+from pydub.playback import play
 
 def rgbAnsiBg(r, g, b, txt):
     return f'\033[48;2;{r};{g};{b}m{txt}\033[0m'
@@ -72,7 +81,7 @@ def mathFloor(num, fNum):
     fNum = (10 ** fNum)
     return math.floor(num * fNum) / fNum
 
-def videoToConsole(videoPath, debug=False):
+def videoToConsole(videoPath, debug=False, colorMode='color'):
     consoleInit()
     cap = cv2.VideoCapture(videoPath)
     fps = cap.get(cv2.CAP_PROP_FPS)
@@ -85,6 +94,9 @@ def videoToConsole(videoPath, debug=False):
 
     videoStartTime = time.perf_counter()
     while cap.isOpened():
+        checkQuit()
+        if mathFloor(duration, 0) % 4 == 0:
+            colorMode = colorChange(colorMode)
         frameStartTime = time.perf_counter()
         ret, frame = cap.read()
         if not ret:
@@ -98,7 +110,7 @@ def videoToConsole(videoPath, debug=False):
         consoleSize = shutil.get_terminal_size()
         frameToConsole(
             frame, width=consoleSize.columns, height=consoleSize.lines-1, addLinesToBack=addLinesToBack,
-            colorMode='mono',
+            colorMode=colorMode,
             # fontColor=None,
             fontColor=[255, 255, 255],
             renderMode='line'
@@ -144,8 +156,41 @@ def videoToConsole(videoPath, debug=False):
     videoEndTime = time.perf_counter()
     cap.release()
 
-# Video file path
-videoPath = './video.webm'
+def checkQuit():
+    if keyboard.is_pressed('q'):
+        print('停止中...')
+        exit()
+        # signalHandler()
+    return
 
-# Play video on console
-videoToConsole(videoPath, debug=True)
+def colorChange(colorMode):
+    if keyboard.is_modifier('c'):
+        return 'color' if colorMode == 'mono' else 'mono'
+    return colorMode
+
+def ffmpeg(inputFile, outputFile):
+    command = ['ffmpeg', '-y', '-i', inputFile, outputFile]
+    subprocess.run(command, check=True)
+
+def playSound(sleepTime):
+    time.sleep(sleepTime)
+    sound = AudioSegment.from_file('./temp.mp3')
+    play(sound)
+
+stopEvent = threading.Event()
+def signalHandler(sig, frame):
+    print('停止中...')
+    sys.exit()
+
+if __name__ == '__main__':
+    # Video file path
+    videoPath = './sikanoko.webm'
+
+    # Play Sound
+    ffmpeg(videoPath, './temp.mp3')
+    soundThread = threading.Thread(target=playSound, args=(0.1,))
+    soundThread.setDaemon(True)
+    soundThread.start()
+
+    # Play video on console
+    videoToConsole(videoPath, debug=False, colorMode='color')
