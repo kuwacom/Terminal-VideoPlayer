@@ -1,6 +1,11 @@
 # What Is This
 このプログラムは、terminal及びconsoleでANSI文字コードを使い、フルカラーもしくはモノクロで動画を再生する物です。
 
+ターミナルのサイズに追従したリアルタイムフルスクリーン表示も可能です。
+
+![mono](./images/mono.gif)
+![color](./images/color.gif)
+
 # How To Use
 各自環境に合わせて設定してください
 
