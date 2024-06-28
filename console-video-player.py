@@ -1,3 +1,4 @@
+import argparse
 import math
 import cv2
 import shutil
@@ -80,11 +81,23 @@ def mathFloor(num, fNum):
     fNum = (10 ** fNum)
     return math.floor(num * fNum) / fNum
 
-def videoToConsole(videoPath, debug=False, playAudio=True, colorMode='color', fontColor=None, renderMode='line'):
+def videoToConsole(videoPath, debug=False, playAudio=True, width=None, height=None, colorMode='color', fontColor=None, renderMode='line'):
     print('Loading Video File...')
     cap = cv2.VideoCapture(videoPath)
     fps = cap.get(cv2.CAP_PROP_FPS)
     frameInterval = mathFloor(1 / fps, 5)
+
+    videoWidth = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    videoHeight = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    aspectRatio = videoHeight / videoWidth
+
+    fullSize = False
+    if width != None and height == None:
+        height = int(width * aspectRatio)
+    elif width == None and height != None:
+        width = int(height / aspectRatio)
+    else:
+        fullSize = True
 
     duration = 0
     fpsHistory = 0
@@ -101,14 +114,14 @@ def videoToConsole(videoPath, debug=False, playAudio=True, colorMode='color', fo
 
     if playAudio:
         soundThread = threading.Thread(target=play, args=(sound,))
-        soundThread.setDaemon(True)
+        soundThread.daemon = True
         soundThread.start()
     
     videoStartTime = time.perf_counter()
     while cap.isOpened():
         checkQuit()
-        if mathFloor(duration, 0) % 4 == 0:
-            colorMode = colorChange(colorMode)
+        # if math.floor(duration) % 2 == 0:
+        colorMode = colorChange(colorMode)
         frameStartTime = time.perf_counter()
         ret, frame = cap.read()
         if not ret:
@@ -118,10 +131,12 @@ def videoToConsole(videoPath, debug=False, playAudio=True, colorMode='color', fo
         addLinesToBack = 0
         if debug:
             addLinesToBack = 7
-
-        consoleSize = shutil.get_terminal_size()
+        if fullSize:
+            consoleSize = shutil.get_terminal_size()
+            width=consoleSize.columns
+            height=consoleSize.lines-1
         frameToConsole(
-            frame, width=consoleSize.columns, height=consoleSize.lines-1, addLinesToBack=addLinesToBack,
+            frame, width=width, height=height, addLinesToBack=addLinesToBack,
             colorMode=colorMode,
             fontColor=fontColor,
             # fontColor=[255, 255, 255],
@@ -190,12 +205,39 @@ def signalHandler(sig, frame):
     sys.exit()
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Console Video Player')
+    parser.add_argument('videoPath', type=str, help='再生するビデオファイルのpath')
+    parser.add_argument('--loop', action='store_true', help='ループ再生')
+    parser.add_argument('--width', type=int, help='幅')
+    parser.add_argument('--height', type=int, help='高さ')
+    parser.add_argument('--playAudio', action='store_true', help='Play audio along with video')
+    parser.add_argument('--colorMode', type=str, choices=['mono', 'color'], default='mono', help='フルカラーかモノクロか')
+    parser.add_argument('--fontColor', type=str, help='モノクロ時の文字色(例: 256,256,256)')
+    parser.add_argument('--renderMode', type=str, choices=['once', 'line'], default='line', help='consoleへのテキストの描画方法')
+    parser.add_argument('--debug', action='store_true', help='デバッグモード')
+    args = parser.parse_args()
+    
     # Video file path
-    videoPath = './sikanoko.webm'
+    videoPath = './video.webm'
+    if args.videoPath != None:
+        videoPath = args.videoPath
 
     # Convert Audio File
     print('Convert Audio File...')
     ffmpeg(videoPath, './temp.mp3')
 
+    fontColor=None
+    if args.fontColor != None:
+        fontColor = args.fontColor.split(',')
+
     # Play video on console
-    videoToConsole(videoPath, debug=False, playAudio=True, colorMode='color', fontColor=None, renderMode='line')
+    while True:
+        videoToConsole(videoPath,
+            debug=args.debug,
+            playAudio=not args.playAudio,
+            width=args.width, height=args.height,
+            colorMode=args.colorMode, fontColor=fontColor,
+            renderMode=args.renderMode
+        )
+        if not args.loop:
+            break
