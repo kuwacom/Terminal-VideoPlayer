@@ -4,14 +4,6 @@
 # How To Use
 各自環境に合わせて設定してください
 
-例えばpythonコマンドなど...
-
-| OS | コマンド | 例 |
-|----|----------|----|
-| Windows(PythonLauncher) | `py -<version>` or `py` | `py -3.10 ./main.py` |
-| Windows(UWP) | `python` | `python ./main.py` |
-| Linux | `python3` | `python3 ./main.py` |
-
 ### 注意
 **前提条件として、利用するターミナル及びコンソールがANSIエスケープシーケンスに対応している必要があります！**<br>
 **`console.color-checker.py`を利用して簡単にテストできますので、利用前にあらかじめ確認してください**
