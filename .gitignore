@@ -1,6 +1,8 @@
 # Python venv
 venv
 
-# Video files
+# Video & Audio files
+*.mp3
+*.wav
 *.mp4
 *.webm
