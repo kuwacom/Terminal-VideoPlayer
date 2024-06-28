@@ -6,7 +6,6 @@ import keyboard
 
 import subprocess
 import threading
-import signal
 import sys
 
 from pydub import AudioSegment
@@ -81,8 +80,8 @@ def mathFloor(num, fNum):
     fNum = (10 ** fNum)
     return math.floor(num * fNum) / fNum
 
-def videoToConsole(videoPath, debug=False, colorMode='color'):
-    consoleInit()
+def videoToConsole(videoPath, debug=False, playAudio=True, colorMode='color', fontColor=None, renderMode='line'):
+    print('Loading Video File...')
     cap = cv2.VideoCapture(videoPath)
     fps = cap.get(cv2.CAP_PROP_FPS)
     frameInterval = mathFloor(1 / fps, 5)
@@ -92,6 +91,19 @@ def videoToConsole(videoPath, debug=False, colorMode='color'):
 
     frameSkipDelay = 0
 
+    # Play Sound
+    if playAudio:
+        print('Loading Sound File...')
+        sound = AudioSegment.from_file('./temp.mp3')
+
+    consoleInit()
+    time.sleep(0.1)
+
+    if playAudio:
+        soundThread = threading.Thread(target=play, args=(sound,))
+        soundThread.setDaemon(True)
+        soundThread.start()
+    
     videoStartTime = time.perf_counter()
     while cap.isOpened():
         checkQuit()
@@ -111,9 +123,9 @@ def videoToConsole(videoPath, debug=False, colorMode='color'):
         frameToConsole(
             frame, width=consoleSize.columns, height=consoleSize.lines-1, addLinesToBack=addLinesToBack,
             colorMode=colorMode,
-            # fontColor=None,
-            fontColor=[255, 255, 255],
-            renderMode='line'
+            fontColor=fontColor,
+            # fontColor=[255, 255, 255],
+            renderMode=renderMode
         )
         renderEndTime = time.perf_counter()
         consoleRenderTime = renderEndTime - frameStartTime
@@ -172,11 +184,6 @@ def ffmpeg(inputFile, outputFile):
     command = ['ffmpeg', '-y', '-i', inputFile, outputFile]
     subprocess.run(command, check=True)
 
-def playSound(sleepTime):
-    time.sleep(sleepTime)
-    sound = AudioSegment.from_file('./temp.mp3')
-    play(sound)
-
 stopEvent = threading.Event()
 def signalHandler(sig, frame):
     print('停止中...')
@@ -186,11 +193,9 @@ if __name__ == '__main__':
     # Video file path
     videoPath = './sikanoko.webm'
 
-    # Play Sound
+    # Convert Audio File
+    print('Convert Audio File...')
     ffmpeg(videoPath, './temp.mp3')
-    soundThread = threading.Thread(target=playSound, args=(0.1,))
-    soundThread.setDaemon(True)
-    soundThread.start()
 
     # Play video on console
-    videoToConsole(videoPath, debug=False, colorMode='color')
+    videoToConsole(videoPath, debug=False, playAudio=True, colorMode='color', fontColor=None, renderMode='line')
