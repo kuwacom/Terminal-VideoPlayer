@@ -9,8 +9,7 @@ import subprocess
 import threading
 import sys
 
-from pydub import AudioSegment
-from pydub.playback import play
+import simpleaudio
 
 def rgbAnsiBg(r, g, b, txt):
     return f'\033[48;2;{r};{g};{b}m{txt}\033[0m'
@@ -81,6 +80,10 @@ def mathFloor(num, fNum):
     fNum = (10 ** fNum)
     return math.floor(num * fNum) / fNum
 
+def play(sound):
+    play = sound.play()
+    play.wait_done()
+
 def videoToConsole(videoPath, debug=False, playAudio=True, width=None, height=None, colorMode='color', fontColor=None, renderMode='line'):
     print('Loading Video File...')
     cap = cv2.VideoCapture(videoPath)
@@ -107,7 +110,7 @@ def videoToConsole(videoPath, debug=False, playAudio=True, width=None, height=No
     # Play Sound
     if playAudio:
         print('Loading Sound File...')
-        sound = AudioSegment.from_file('./temp.mp3')
+        sound = simpleaudio.WaveObject.from_wave_file("./temp.wav")
 
     consoleInit()
     time.sleep(0.1)
@@ -224,7 +227,7 @@ if __name__ == '__main__':
 
     # Convert Audio File
     print('Convert Audio File...')
-    ffmpeg(videoPath, './temp.mp3')
+    ffmpeg(videoPath, './temp.wav')
 
     fontColor=None
     if args.fontColor != None:
