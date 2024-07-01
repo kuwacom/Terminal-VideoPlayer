@@ -55,7 +55,7 @@ def frameToConsole(
             ' ', '.', ':', '-', '=', '+', '*', 
             '░', '▒', '▓', '█'
         ]
-        gray = (gray / 255) * (len(chars) - 1)
+        gray = (gray / 256 * len(chars))
         gray = gray.astype(int)
         
         if renderMode=='once':
