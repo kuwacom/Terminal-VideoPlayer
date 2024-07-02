@@ -229,7 +229,9 @@ if __name__ == '__main__':
 
     # Convert Audio File
     print('Convert Audio File...')
-    ffmpeg(videoPath, './temp.wav')
+
+    if not args.playAudio:
+        ffmpeg(videoPath, './temp.wav')
 
     fontColor=None
     if args.fontColor != None:
